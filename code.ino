@@ -1,69 +1,76 @@
-// Created by Infinity de Guzman on April 5 2022
 
-#include<Servo.h>
-int dt=10;
+// ------------------------------------------ //
+// Arduino Ultrasonic Sensor HC-SR04 and Servo
+// It moves the servo if the sensor detects a distance less than 50cm 
+// Created by: Infinity de Guzman
+// Created on: April 2022
+// ------------------------------------------ //
+
+#include <Servo.h>
+
 Servo servo;
+
+int trigPin = 2;
+int echoPin = 3;
+
+// defines variables
 long duration; // variable for the duration of sound wave travel
 int distance; // variable for the distance measurement
-int pos=0;
-int trig=2;
-int echo=3;
+int angle; // variable for the angle of the servo
+bool clockwise = true; // determines the direction of servo's movement
+int maxAngle = 180;
+int maxDistance = 50;
 
-//int distance,duration;
 void setup() {
-Serial.begin(9600);
-servo.attach(7);
+  pinMode(trigPin, OUTPUT); // Sets the trigPin as an OUTPUT
+  pinMode(echoPin, INPUT); // Sets the echoPin as an INPUT
+  Serial.begin(9600); // // Serial Communication is starting with 9600 of baudrate speed
+  Serial.println("Ultrasonic Sensor HC-SR04 Test"); // print some text in Serial Monitor
+  Serial.println("with Arduino UNO R3");
+  
+  servo.attach(7);
+  servo.write(0); // changes the angle to zero
 }
-
 void loop() {
-
-if (calc_dis()<50)
-{
-  for (pos = 0; pos <= 180; pos += 2)
-  {
-    servo.write(pos);
-    delay(10);
-  }
-  for (pos = 180; pos >= 0; pos -= 2)
-  {
-    servo.write(pos);
-    delay(10);
-  }
-}
-else if (calc_dis()>50) {
-    delay(4000);
-}
-
-// Clears the trigPin condition
-  digitalWrite(trig, LOW);
+  // Clears the trigPin condition
+  digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
+
   // Sets the trigPin HIGH (ACTIVE) for 10 microseconds
-  digitalWrite(trig, HIGH);
+  digitalWrite(trigPin, HIGH);
   delayMicroseconds(10);
-  digitalWrite(trig, LOW);
+  digitalWrite(trigPin, LOW);
+
   // Reads the echoPin, returns the sound wave travel time in microseconds
-  duration = pulseIn(echo, HIGH);
-// Calculating the distance
+  duration = pulseIn(echoPin, HIGH);
+
+  // Calculating the distance
   distance = duration * 0.034 / 2; // Speed of sound wave divided by 2 (go and back)
+  
   // Displays the distance on the Serial Monitor
   Serial.print("Distance: ");
   Serial.print(distance);
   Serial.println(" cm");
-
+  
+  // if it reaches the maximum angle it will rotate backwards 
+  if (angle == maxAngle) {
+    clockwise = false;
+  // if it reaches the minimum angle it will rotate the other way
+  } else if (angle == 0) {
+    clockwise = true;
+  }
+  // The servo will only rotate if the distance is below 50cm
+  if (distance < maxDistance) {
+    if (clockwise) {
+        angle++;
+        servo.write(angle);
+    } else {
+      angle--;
+      servo.write(angle);
+    }
+  }
+ 
+  Serial.print("Angle: ");
+  Serial.println(angle);
 }
-
-//This code is written to calculate the DISTANCE using ULTRASONIC SENSOR
-
-int calc_dis()
-{
-  int duration,distance;
-  digitalWrite(trig,HIGH);
-  delay(dt);
-  digitalWrite(trig,LOW);
-  duration=pulseIn(echo,HIGH);
-  distance = (duration/2) / 29.1;
-  return distance;
-}
-
-
 
